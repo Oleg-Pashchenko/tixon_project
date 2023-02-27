@@ -16,7 +16,7 @@ client = TelegramClient('test', int(api_id), api_hash)
 
 
 async def get_invite_importers():
-    await client.connect()
+    await client.start()
     answer = []
     response = await client.get_entity(int(chat_id))
     user_account = await client.get_entity(user_id)
