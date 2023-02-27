@@ -3,26 +3,27 @@ import pandas as pd
 import dotenv
 from telethon import TelegramClient, functions
 from telethon.tl.types import InputUserEmpty, InputPeerChannel, InputUser
-
 import asyncio
 
 dotenv.load_dotenv()
-chat_id = int(os.getenv('CHANNEL_CHAT_ID'))
-api_id = int(os.getenv('API_ID'))
+
+chat_id = os.getenv('CHANNEL_CHAT_ID')
+api_id = os.getenv('API_ID')
 api_hash = os.getenv("API_HASH")
-user_id = int(os.getenv("USER_CHAT_ID"))
-client = TelegramClient('Test', api_id, api_hash)
+user_id = int(os.getenv('USER_CHAT_ID'))
+
+client = TelegramClient('test', int(api_id), api_hash)
 
 
 async def get_invite_importers():
     await client.connect()
     answer = []
-    channel_account = await client.get_entity(chat_id)
+    response = await client.get_entity(int(chat_id))
     user_account = await client.get_entity(user_id)
     links = await client(functions.messages.GetExportedChatInvitesRequest(
         admin_id=InputUser(access_hash=user_account.access_hash, user_id=user_id),
         limit=100000,
-        peer=InputPeerChannel(access_hash=channel_account.access_hash, channel_id=channel_account.id)
+        peer=InputPeerChannel(access_hash=response.access_hash, channel_id=response.id)
     ))
     for link in links.invites:
         link = link.link
@@ -31,7 +32,7 @@ async def get_invite_importers():
             link=link,
             offset_date=None,
             offset_user=InputUserEmpty(),
-            peer=InputPeerChannel(access_hash=channel_account.access_hash, channel_id=channel_account.id)
+            peer=InputPeerChannel(access_hash=response.access_hash, channel_id=response.id)
         ))
 
         for user in result.users:
@@ -48,3 +49,4 @@ async def get_invite_importers():
 
 loop = asyncio.get_event_loop()
 result = loop.run_until_complete(get_invite_importers())
+print(result)
