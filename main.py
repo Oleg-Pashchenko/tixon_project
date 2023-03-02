@@ -20,13 +20,19 @@ async def get_invite_importers():
     answer = []
     response = await client.get_entity(int(chat_id))
     user_account = await client.get_entity(user_id)
-    links = await client(functions.messages.GetExportedChatInvitesRequest(
-        admin_id=InputUser(access_hash=user_account.access_hash, user_id=user_id),
-        limit=100000,
-        peer=InputPeerChannel(access_hash=response.access_hash, channel_id=response.id)
-    ))
-    for link in links.invites:
+    links = []
+    from telethon.tl.types import ChannelParticipantsAdmins
+    async for user in client.iter_participants(response.id, filter=ChannelParticipantsAdmins):
+        l = await client(functions.messages.GetExportedChatInvitesRequest(
+            admin_id=InputUser(access_hash=user.access_hash, user_id=user.id),
+            limit=100000,
+            peer=InputPeerChannel(access_hash=response.access_hash, channel_id=response.id)
+        ))
+        links += l.invites
+
+    for link in links:
         link = link.link
+        print(link)
         result = await client(functions.messages.GetChatInviteImportersRequest(
             limit=100000,
             link=link,
